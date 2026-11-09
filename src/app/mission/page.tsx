@@ -31,7 +31,7 @@ export default function MissionsPage() {
   if (loading) return <div className="p-10 text-center">Chargement...</div>
 
   // On construit l'URL magique de Timewall avec TON App ID et L'ID de l'utilisateur
-  const iframeUrl = `https://timewall.io/users/v1/login?app_id=${30e4a4c28c7eb35b}&user_id=${user?.id}`
+  const iframeUrl = `https://timewall.io/users/v1/login?app_id=${c7332e7c5c02283a}&user_id=${user?.id}`
 
   return (
     <div className="min-h-screen bg-[#F7F9FC] p-8">
