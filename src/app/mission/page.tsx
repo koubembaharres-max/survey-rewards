@@ -6,8 +6,7 @@ import { ArrowLeft, Play, Zap } from 'lucide-react'
 import { supabase } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// 👇 REMPLACE PAR TON VRAI APP ID TIMEWALL
-const TIMEWALL_APP_ID = '30e4a4c28c7eb35b' 
+const TIMEWALL_APP_ID = 'c7332e7c5c02283a' // Ton ID Timewall
 
 export default function MissionsPage() {
   const router = useRouter()
@@ -17,27 +16,33 @@ export default function MissionsPage() {
 
   useEffect(() => {
     async function checkUser() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/login')
-        return
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          router.push('/login')
+          return
+        }
+        setUser(session.user)
+      } catch (err) {
+        console.error("Erreur session:", err)
+      } finally {
+        setLoading(false)
       }
-      setUser(session.user)
-      setLoading(false)
     }
     checkUser()
   }, [router])
 
-  if (loading) return <div className="p-10 text-center">Chargement...</div>
+  if (loading) return <div className="p-10 text-center text-gray-500">Chargement...</div>
 
-  // On construit l'URL magique de Timewall avec TON App ID et L'ID de l'utilisateur
-  const iframeUrl = `timewall.io/users/login?oid=30e4a4c28c7eb35b&uid=${user?.id}`
+  // On s'assure que user existe avant de générer l'URL
+  const iframeUrl = user?.id 
+    ? `https://timewall.io/wall?app_id=${TIMEWALL_APP_ID}&user_id=${user.id}`
+    : ''
 
   return (
     <div className="min-h-screen bg-[#F7F9FC] p-8">
       <div className="max-w-5xl mx-auto">
         
-        {/* En-tête */}
         <div className="flex items-center gap-4 mb-8">
           <Link href="/dashboard" className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition">
             <ArrowLeft size={20} className="text-gray-600" />
@@ -48,7 +53,6 @@ export default function MissionsPage() {
           </div>
         </div>
 
-        {/* Si on a cliqué sur Commencer, on affiche l'iframe Timewall */}
         {activeMission ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 h-[800px] flex flex-col">
             <div className="flex justify-between items-center p-4 border-b border-gray-100">
@@ -63,15 +67,19 @@ export default function MissionsPage() {
                 Fermer
               </button>
             </div>
-            {/* L'IFRAME REEL DE TIMEWALL */}
-            <iframe 
-              src={iframeUrl} 
-              className="w-full flex-1 rounded-b-xl border-none"
-              title="Timewall Surveys"
-            />
+            {iframeUrl ? (
+              <iframe 
+                src={iframeUrl} 
+                className="w-full flex-1 rounded-b-xl border-none"
+                title="Timewall Surveys"
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-gray-500">
+                Erreur de chargement de l'utilisateur.
+              </div>
+            )}
           </div>
         ) : (
-          /* Sinon, on affiche la carte pour entrer */
           <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center max-w-2xl mx-auto mt-10">
             <div className="w-20 h-20 bg-[#DDF7EC] text-[#009B68] rounded-full flex items-center justify-center mx-auto mb-6">
               <Zap size={40} />
