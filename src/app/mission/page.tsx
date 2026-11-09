@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 // 👇 REMPLACE PAR TON VRAI APP ID TIMEWALL
-const TIMEWALL_APP_ID = 'TON_APP_ID_ICI' 
+const TIMEWALL_APP_ID = '30e4a4c28c7eb35b' 
 
 export default function MissionsPage() {
   const router = useRouter()
