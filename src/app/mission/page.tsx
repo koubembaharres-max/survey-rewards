@@ -1,12 +1,37 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Play, Star, Zap } from 'lucide-react'
+import { ArrowLeft, Play, Zap } from 'lucide-react'
+import { supabase } from '@/lib/supabase-browser'
+import { useRouter } from 'next/navigation'
+
+// 👇 REMPLACE PAR TON VRAI APP ID TIMEWALL
+const TIMEWALL_APP_ID = 'TON_APP_ID_ICI' 
 
 export default function MissionsPage() {
-  // Cet état nous permet d'afficher ou non le faux iframe
-  const [activeMission, setActiveMission] = useState<string | null>(null)
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [activeMission, setActiveMission] = useState<boolean>(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function checkUser() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.push('/login')
+        return
+      }
+      setUser(session.user)
+      setLoading(false)
+    }
+    checkUser()
+  }, [router])
+
+  if (loading) return <div className="p-10 text-center">Chargement...</div>
+
+  // On construit l'URL magique de Timewall avec TON App ID et L'ID de l'utilisateur
+  const iframeUrl = `https://timewall.io/users/v1/login?app_id=${TIMEWALL_APP_ID}&user_id=${user?.id}`
 
   return (
     <div className="min-h-screen bg-[#F7F9FC] p-8">
@@ -23,102 +48,44 @@ export default function MissionsPage() {
           </div>
         </div>
 
-        {/* Si une mission est active, on affiche l'iframe */}
+        {/* Si on a cliqué sur Commencer, on affiche l'iframe Timewall */}
         {activeMission ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 h-[750px] flex flex-col">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 h-[800px] flex flex-col">
             <div className="flex justify-between items-center p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <p className="font-medium text-gray-700">Enquête en cours...</p>
+                <p className="font-medium text-gray-700">Mur d'enquêtes Timewall</p>
               </div>
               <button 
-                onClick={() => setActiveMission(null)} 
+                onClick={() => setActiveMission(false)} 
                 className="text-red-500 text-sm font-medium hover:underline"
               >
-                Annuler la mission
+                Fermer
               </button>
             </div>
-            
-            {/* C'est ICI que le vrai iframe du partenaire ira plus tard */}
-            <div className="flex-1 bg-gray-50 rounded-xl m-2 flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200">
-              <Zap size={48} className="mb-4 text-gray-300" />
-              <p className="text-center text-lg font-medium text-gray-500">
-                Espace réservé pour l'enquête
-              </p>
-              <p className="text-sm mt-2 max-w-sm text-center">
-                (Dans la version finale, l'interface de BitLabs ou Timewall s'affichera ici. Le postback nous préviendra une fois l'enquête terminée).
-              </p>
-            </div>
+            {/* L'IFRAME REEL DE TIMEWALL */}
+            <iframe 
+              src={iframeUrl} 
+              className="w-full flex-1 rounded-b-xl border-none"
+              title="Timewall Surveys"
+            />
           </div>
         ) : (
-          /* Sinon, on affiche la grille des missions */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            {/* Mission 1 */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition">
-              <div>
-                <div className="flex justify-between items-start">
-                  <span className="text-xs font-bold text-[#009B68] bg-[#DDF7EC] px-2 py-1 rounded flex items-center gap-1">
-                    <Star size={12} /> Recommandée
-                  </span>
-                  <span className="text-sm font-bold text-[#64748B]">5 min</span>
-                </div>
-                <h3 className="text-lg font-bold text-[#172033] mt-4">Sondage sur les habitudes d'achat</h3>
-                <p className="text-sm text-gray-500 mt-2">Donnez votre avis sur les marques de grande consommation.</p>
-              </div>
-              <div className="flex justify-between items-center mt-6 border-t border-gray-100 pt-4">
-                <span className="text-2xl font-bold text-[#009B68]">1.50 $</span>
-                <button 
-                  onClick={() => setActiveMission('achat')}
-                  className="bg-[#003D35] text-white px-5 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-[#009B68] transition"
-                >
-                  <Play size={16} /> Commencer
-                </button>
-              </div>
+          /* Sinon, on affiche la carte pour entrer */
+          <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center max-w-2xl mx-auto mt-10">
+            <div className="w-20 h-20 bg-[#DDF7EC] text-[#009B68] rounded-full flex items-center justify-center mx-auto mb-6">
+              <Zap size={40} />
             </div>
-
-            {/* Mission 2 */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition">
-              <div>
-                <div className="flex justify-between items-start">
-                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Nouveau</span>
-                  <span className="text-sm font-bold text-[#64748B]">10 min</span>
-                </div>
-                <h3 className="text-lg font-bold text-[#172033] mt-4">Étude sur les jeux mobiles</h3>
-                <p className="text-sm text-gray-500 mt-2">Testez un nouveau jeu et répondez à un questionnaire UX.</p>
-              </div>
-              <div className="flex justify-between items-center mt-6 border-t border-gray-100 pt-4">
-                <span className="text-2xl font-bold text-[#009B68]">2.20 $</span>
-                <button 
-                  onClick={() => setActiveMission('jeux')}
-                  className="bg-[#003D35] text-white px-5 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-[#009B68] transition"
-                >
-                  <Play size={16} /> Commencer
-                </button>
-              </div>
-            </div>
-
-            {/* Mission 3 */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition">
-              <div>
-                <div className="flex justify-between items-start">
-                  <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded">Rapide</span>
-                  <span className="text-sm font-bold text-[#64748B]">2 min</span>
-                </div>
-                <h3 className="text-lg font-bold text-[#172033] mt-4">Avis sur les services bancaires</h3>
-                <p className="text-sm text-gray-500 mt-2">Une courte enquête sur votre banque actuelle.</p>
-              </div>
-              <div className="flex justify-between items-center mt-6 border-t border-gray-100 pt-4">
-                <span className="text-2xl font-bold text-[#009B68]">0.80 $</span>
-                <button 
-                  onClick={() => setActiveMission('banque')}
-                  className="bg-[#003D35] text-white px-5 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-[#009B68] transition"
-                >
-                  <Play size={16} /> Commencer
-                </button>
-              </div>
-            </div>
-
+            <h2 className="text-2xl font-bold text-[#172033] mb-2">Prêt à gagner de l'argent ?</h2>
+            <p className="text-[#64748B] mb-8">
+              Cliquez ci-dessous pour ouvrir le mur d'enquêtes sécurisé de notre partenaire Timewall.
+            </p>
+            <button 
+              onClick={() => setActiveMission(true)}
+              className="bg-[#009B68] text-white px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-2 mx-auto hover:bg-[#008a5d] transition shadow-lg shadow-green-200"
+            >
+              <Play size={20} /> Accéder aux enquêtes
+            </button>
           </div>
         )}
       </div>
