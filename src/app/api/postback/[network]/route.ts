@@ -1,7 +1,6 @@
-export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { supabaseAdmin as db } from '@/lib/supabase-admin'
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { NETWORKS } from '@/lib/networks'
 
 function safeEqual(a: string, b: string) {
@@ -11,6 +10,7 @@ function safeEqual(a: string, b: string) {
 }
 
 async function handle(req: NextRequest, network: string) {
+  const db = getSupabaseAdmin()
   const cfg = NETWORKS[network]
   if (!cfg) {
     return NextResponse.json({ error: 'unknown_network' }, { status: 404 })
